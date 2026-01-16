@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'habits',
     'telegram_bot',
     'users',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [

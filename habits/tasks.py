@@ -17,6 +17,7 @@ def send_habit_reminders():
 
     for habit in habits:
         # ⚠️ У пользователя должно быть поле telegram_chat_id
-        if hasattr(habit.user, "telegram_chat_id"):
+        if hasattr(habit.user, "profile") and habit.user.profile.telegram_chat_id:
+            chat_id = habit.user.profile.telegram_chat_id
             message = f"Напоминание: {habit.action} в {habit.place}"
-            send_telegram_message(habit.user.telegram_chat_id, message)
+            send_telegram_message(chat_id, message)

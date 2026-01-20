@@ -3,6 +3,7 @@ import requests
 from celery import shared_task
 from django.conf import settings
 
+
 @shared_task
 def send_telegram_message(chat_id: str, text: str):
     """Отправка сообщения пользователю"""

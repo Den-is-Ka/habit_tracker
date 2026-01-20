@@ -3,6 +3,7 @@ from celery import shared_task
 from .models import Habit
 from telegram_bot.tasks import send_telegram_message
 
+
 @shared_task
 def debug_task():
     print("✅ Celery работает корректно!")

@@ -1,13 +1,16 @@
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
-from .models import Habit
+from habits.models import Habit
 
 User = get_user_model()
 
-class HabitTest(APITestCase):
+
+class HabitApiTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            email="test@test.com", password="12345"
+            username="apiuser",
+            email="api@test.com",
+            password="12345"
         )
         self.client.force_authenticate(self.user)
 
@@ -20,3 +23,9 @@ class HabitTest(APITestCase):
             "duration": 60
         })
         self.assertEqual(response.status_code, 201)
+
+    def test_public_habit_list_visible(self):
+        Habit.objects.create(user=self.user, place="дом", time="10:00", action="чай", is_public=True)
+        response = self.client.get("/api/habits/habits/?public=true")
+        self.assertEqual(response.status_code, 200)
+        self.assertGreater(len(response.data["results"]), 0)

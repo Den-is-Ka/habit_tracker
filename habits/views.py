@@ -14,8 +14,9 @@ class HabitViewSet(viewsets.ModelViewSet):
         - Публичные привычки видны всем (read-only)
         """
         if self.action == "list" and self.request.query_params.get("public") == "true":
-            return Habit.objects.filter(is_public=True)
-        return Habit.objects.filter(user=self.request.user)
+            return Habit.objects.filter(is_public=True).order_by("-id")
+
+        return Habit.objects.filter(user=self.request.user).order_by("-id")
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

@@ -18,4 +18,3 @@ class IsOwnerOrReadOnlyPublic(BasePermission):
 
         # Изменять / удалять можно только свои
         return obj.user == request.user
-

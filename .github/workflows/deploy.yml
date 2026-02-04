@@ -9,6 +9,27 @@ jobs:
   test_lint_build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+      DJANGO_SETTINGS_MODULE: config.settings
+      SECRET_KEY: testkey
+      DEBUG: 1
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,6 +47,14 @@ jobs:
 
       - name: Run linting (flake8)
         run: poetry run flake8 .
+
+      - name: Wait for PostgreSQL
+        run: |
+          echo "⏳ Waiting for PostgreSQL to be ready..."
+          until pg_isready -h localhost -U postgres; do
+            sleep 1
+          done
+          echo "✅ PostgreSQL is up!"
 
       - name: Run tests (pytest)
         run: poetry run pytest

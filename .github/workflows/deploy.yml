@@ -78,7 +78,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-ce-cli
-          pip install docker-compose
+          pip install --upgrade pip setuptools wheel
+          pip install "docker-compose==1.29.2"
 
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.1.0

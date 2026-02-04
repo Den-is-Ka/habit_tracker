@@ -74,12 +74,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Ensure Docker Compose installed
+      - name: Ensure Docker Compose installed (v2)
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker-ce-cli
-          pip install --upgrade pip setuptools wheel
-          pip install "docker-compose==1.29.2"
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+          docker compose version
 
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.1.0

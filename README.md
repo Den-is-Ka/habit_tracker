@@ -1,198 +1,176 @@
 # 🧠 Habit Tracker — Сервис привычек с напоминаниями и Telegram-интеграцией
-
 **Habit Tracker** — это Django REST API-сервис для создания, отслеживания и напоминания о полезных и приятных привычках.  
-Пользователь может формировать собственные привычки, получать ежедневные напоминания в Telegram и просматривать публичные привычки других пользователей.
+Приложение полностью контейнеризировано с помощью **Docker Compose**, поддерживает **CI/CD через GitHub Actions**, и
+автоматически деплоится на удалённый сервер.
+
+🔗 **Деплой:** [http://158.160.52.224](http://158.160.52.224)
 
 ---
 
-## 🚀 Основные функции
-
+## 🚀 Основные возможности
 - ✅ CRUD-операции с привычками  
-- 🔔 Ежедневные напоминания через **Telegram-бота**  
+- 🔔 Напоминания в **Telegram**  
 - 🔁 Периодичность выполнения (по умолчанию ежедневно)  
-- 🕒 Контроль времени выполнения (до 120 секунд)  
-- 💬 Приятные и полезные привычки (связанные привычки)  
-- 🔒 Авторизация через **JWT**  
+- 💬 Разделение на полезные и приятные привычки  
+- 🔒 Авторизация по **JWT-токенам**  
 - 🌐 Поддержка **CORS** для фронтенда  
-- 📄 Документация **Swagger / OpenAPI**  
-- ⚙️ Отложенные задачи через **Celery + Redis**  
-- 🧩 Тесты Pytest и оформление по **PEP8 / flake8**
+- 📄 Swagger / OpenAPI-документация  
+- ⚙️ Асинхронные задачи через **Celery + Redis**  
+- 🧩 Контейнеризация (Django, PostgreSQL, Redis, Celery, Nginx)  
+- 🚀 Автоматический деплой через **GitHub Actions**
 
 ---
 
 ## 🏗️ Технологический стек
-
-| Компонент | Версия | Описание |
-|------------|--------|-----------|
-| **Python** | 3.13 | язык разработки |
-| **Django** | 6.0.1 | веб-фреймворк |
-| **Django REST Framework** | latest | REST API |
-| **PostgreSQL** | 17.x | основная база данных |
-| **Redis** | 7.x | брокер сообщений для Celery |
-| **Celery** | 5.6.2 | планировщик задач |
-| **DRF Spectacular** | latest | автогенерация Swagger-документации |
-| **django-cors-headers** | 4.9.0 | поддержка CORS |
-| **pytest / pytest-django** | latest | тестирование |
-| **flake8** | latest | проверка стиля кода |
+| Компонент                 | Версия  | Назначение                  |
+|---------------------------|---------|-----------------------------|
+| **Python**                | 3.13    | язык разработки             |
+| **Django**                | 6.0.1   | веб-фреймворк               |
+| **Django REST Framework** | latest  | REST API                    |
+| **PostgreSQL**            | 17      | основная база данных        |
+| **Redis**                 | 7       | брокер сообщений Celery     |
+| **Celery**                | 5.6.2   | планировщик задач           |
+| **Nginx**                 | latest  | обратный прокси             |
+| **Docker Compose**        | 3.9     | управление контейнерами     |
+| **GitHub Actions**        | latest  | CI/CD пайплайн              |
+| **pytest / flake8**       | latest  | тестирование и линтинг кода |
 
 ---
 
-## ⚙️ Установка и настройка
+## ⚙️ Установка и запуск проекта локально
+### 1️⃣ Клонирование репозитория
 
-### 1️⃣ Клонировать репозиторий
-```bash
 git clone https://github.com/username/kurcovaya_5.git
 cd kurcovaya_5
-```
 
-### 2️⃣ Установить зависимости
-```bash
-poetry install
-```
+### 2️⃣ Создание файла окружения .env
 
-### 3️⃣ Создать файл `.env` в корне проекта
-```env
+Используй шаблон .env.example:
+
 DEBUG=True
 SECRET_KEY=dev-secret-key
+
 DB_NAME=kurcovaya_5
 DB_USER=postgres
 DB_PASSWORD=yourpassword
-DB_HOST=localhost
+DB_HOST=db
 DB_PORT=5432
-TELEGRAM_TOKEN=your-telegram-bot-token
-TELEGRAM_ADMIN_CHAT_ID=your-chat-id
-```
 
-### 4️⃣ Применить миграции
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_RESULT_BACKEND=redis://redis:6379/0
 
-### 5️⃣ Создать суперпользователя
-```bash
-python manage.py createsuperuser
-```
+TELEGRAM_TOKEN=your_telegram_token
+TELEGRAM_ADMIN_CHAT_ID=your_chat_id
 
-### 6️⃣ Запустить Redis и Celery
-Redis (Windows):
-```bash
-redis-server
-```
+ALLOWED_HOSTS=127.0.0.1,localhost
 
-Celery worker:
-```bash
-celery -A config worker -l info --pool=solo
-```
+### 3️⃣ Запуск всех контейнеров
+docker compose up -d --build
 
-Celery beat (для планировщика напоминаний):
-```bash
-celery -A config beat -l info
-```
+После запуска:
+Django будет доступен на http://localhost:8000
+Nginx проксирует запросы на http://localhost
 
-### 7️⃣ Запустить сервер Django
-```bash
-python manage.py runserver
-```
+## 📦 Структура контейнеров
 
-После запуска проект будет доступен по адресу:  
-👉 http://127.0.0.1:8000/
+| Сервис     | Образ            | Порт | Назначение              |
+| ---------- | ---------------- | ---- | ----------------------- |
+| **web**    | python:3.13-slim | 8000 | Django + Gunicorn       |
+| **db**     | postgres:17      | 5432 | база данных             |
+| **redis**  | redis:7          | 6379 | брокер Celery           |
+| **celery** | custom           | —    | обработка фоновых задач |
+| **beat**   | custom           | —    | планировщик задач       |
+| **nginx**  | nginx:latest     | 80   | прокси-сервер           |
 
----
+## 🌐 CI/CD с GitHub Actions
 
-## 🔗 Основные эндпоинты API
+Workflow-файл: .github/workflows/deploy.yml
+Что делает пайплайн:
+Проверяет код с помощью flake8
+Запускает pytest
+Собирает Docker-образы
+Подключается к серверу по SSH
+Выполняет:
 
-| Метод | Эндпоинт | Описание |
-|--------|-----------|-----------|
-| `POST` | `/api/token/` | Авторизация (JWT) |
-| `POST` | `/api/token/refresh/` | Обновление токена |
-| `GET` | `/api/habits/habits/` | Список привычек текущего пользователя |
-| `GET` | `/api/habits/habits/?public=true` | Список публичных привычек |
-| `POST` | `/api/habits/habits/` | Создать привычку |
-| `PUT` | `/api/habits/habits/{id}/` | Изменить привычку |
-| `DELETE` | `/api/habits/habits/{id}/` | Удалить привычку |
-| `GET` | `/api/users/me/` | Просмотр профиля пользователя |
-| `GET` | `/api/docs/` | Swagger UI документация |
+cd ~/kurcovaya_5
+git pull origin vetka_2_course_8
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 
----
-
+Настройка GitHub Secrets:
+Переменная	Значение
+SERVER_IP	158.160.52.224
+SERVER_USER	ubuntu
+SERVER_SSH_KEY	приватный ключ id_ed25519_github_actions
+## 🧾 API эндпоинты
+Метод	Эндпоинт	Описание
+POST	/api/token/	Авторизация (JWT)
+POST	/api/token/refresh/	Обновление токена
+GET	/api/habits/habits/	Список привычек пользователя
+GET	/api/habits/habits/?public=true	Публичные привычки
+POST	/api/habits/habits/	Создать привычку
+PUT	/api/habits/habits/{id}/	Изменить привычку
+DELETE	/api/habits/habits/{id}/	Удалить привычку
+GET	/api/users/me/	Профиль пользователя
+GET	/api/docs/	Swagger UI
 ## 🤖 Telegram-интеграция
 
-1. Создайте бота через [@BotFather](https://t.me/BotFather)
-2. Получите токен и добавьте его в `.env`  
-3. Получите свой `chat_id`, отправив любое сообщение боту и вызвав:
-   ```
-   https://api.telegram.org/bot<your_token>/getUpdates
-   ```
-4. Celery ежедневно отправляет напоминания о привычках в Telegram.
+Создайте бота через @BotFather
+Добавьте токен в .env
+Получите chat_id:
+https://api.telegram.org/bot<your_token>/getUpdates
 
----
 
-## 🧪 Тестирование
+Celery ежедневно отправляет напоминания пользователям в Telegram.
 
-### Запуск тестов:
-```bash
+## 🧪 Тестирование и линтинг
+Запуск тестов:
 pytest
-```
 
-✅ Все тесты проходят успешно (5 тестов, 100% pass).  
-Покрытие кода ≥ 80%.
-
----
-
-## 🧹 Проверка кода
-```bash
+Проверка стиля кода:
 flake8 . --exclude=migrations
-```
-✅ 0 ошибок — код полностью соответствует PEP8.
 
----
 
-## 🧰 Архитектура проекта
+✅ 100% PEP8
+✅ Все тесты проходят успешно
 
-```
+## 📂 Архитектура проекта
 kurcovaya_5/
 │
 ├── config/              # настройки Django и Celery
-├── habits/              # приложение привычек
-│   ├── models.py        # модель Habit
-│   ├── views.py         # CRUD эндпоинты
-│   ├── tasks.py         # Celery-задачи (напоминания)
-│   ├── validators.py    # бизнес-правила
-│   ├── permissions.py   # ограничения доступа
-│   ├── tests/           # тесты API и моделей
-│
-├── telegram_bot/        # интеграция с Telegram API
+├── habits/              # логика привычек
+│   ├── models.py
 │   ├── tasks.py
+│   ├── validators.py
+│   ├── tests/
+│
+├── telegram_bot/        # Telegram-интеграция
 │   ├── services.py
+│   ├── tasks.py
 │
 ├── users/               # пользователи и JWT
-│   ├── models.py
-│   ├── views.py
 │   ├── serializers.py
+│   ├── views.py
 │
-├── pyproject.toml       # зависимости Poetry
-├── .env.example         # пример конфигурации
-├── README.md
-```
-
----
+├── docker-compose.yml   # контейнеры проекта
+├── Dockerfile           # сборка образа Django
+├── nginx.conf           # конфигурация Nginx
+├── .env.example         # пример переменных окружения
+├── .github/workflows/   # CI/CD пайплайн
+└── README.md
 
 ## 📈 Результаты
+Критерий	                  Статус
+Docker-контейнеризация	        ✅
+PostgreSQL + Redis            	✅
+Celery + Beat	                ✅
+Nginx-прокси	                ✅
+CI/CD через GitHub Actions	    ✅
+SSH-деплой	                    ✅
+Автоматический билд и рестарт	✅
+Документация и API Swagger	    ✅
+PEP8 / flake8 / pytest	        ✅
+Всё доступно на сервере	        ✅
 
-| Критерий             | Статус |
-|----------------------|--------|
-| CORS                 | ✅     |
-| Переменные окружения | ✅     |
-| Модели и валидация   | ✅     |
-| Эндпоинты            | ✅     |
-| Права доступа        | ✅     |
-| Telegram + Celery    | ✅     |
-| Тесты ≥ 80%          | ✅     |
-| Flake8 = 100%        | ✅     |
-| Swagger              | ✅     |
-
----
-
-> 🎓 *Проект выполнен в рамках курсовой работы по Django.*  
-> Все требования ТЗ выполнены: Telegram-интеграция, Celery, Redis, JWT, CORS, тестирование и документация.
+```bash
